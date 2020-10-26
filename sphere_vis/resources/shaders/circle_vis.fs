@@ -1,7 +1,7 @@
 #version 330 core
 
-uniform vec4 circleColor;
 in vec2 pos;
+in vec4 circleColor;
 out vec4 FragColor;
 
 void main() {

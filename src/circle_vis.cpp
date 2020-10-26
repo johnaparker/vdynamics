@@ -73,7 +73,7 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader(vshader, fshader);
+    Shader shader(vshader, fshader);
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -88,6 +88,22 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
+
+    auto pos_data = pos.unchecked<3>();
+    auto radii_data = radii.unchecked<1>();
+    auto dims_data = dims.unchecked<2>();
+    auto color_data = colors.mutable_unchecked<2>();
+    int Ncolors = color_data.shape(0);
+    int Nparticles = pos_data.shape(1);
+    last_frame = pos_data.shape(0);
+
+    glm::mat4* circleTransforms = new glm::mat4[Nparticles];;
+    glm::vec4* circleColors = new glm::vec4[Nparticles];
+
+    unsigned int transformVBO, colorVBO;
+    glGenBuffers(1, &transformVBO);
+    glGenBuffers(1, &colorVBO);
+
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -102,17 +118,30 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-    ourShader.use(); 
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, transformVBO);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
 
-    auto pos_data = pos.unchecked<3>();
-    auto radii_data = radii.unchecked<1>();
-    auto dims_data = dims.unchecked<2>();
-    auto color_data = colors.mutable_unchecked<2>();
-    int Ncolors = color_data.shape(0);
-    last_frame = pos_data.shape(0);
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+
+    glEnableVertexAttribArray(5);
+    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+    glVertexAttribDivisor(5, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // render loop
     // -----------
@@ -126,7 +155,6 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        ourShader.use();
 
         float xmin = dims_data(0,0);
         float xmax = dims_data(0,1);
@@ -149,8 +177,7 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         }
 
         dx = xmax - xmin;
-        dy = ymax - ymin;
-
+        dy = ymax - ymin; 
         if (dx/dy > aspect_ratio) {
             float buff = dx/aspect_ratio - dy;
             ymax = ymax + buff/2;
@@ -166,26 +193,27 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         window_dy = ymax - ymin;
 
         glm::mat4 projection = glm::ortho(xmin, xmax, ymin, ymax, -0.1f, 0.1f);
-        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "projection");
+        unsigned int transformLoc = glGetUniformLocation(shader.ID, "projection");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-        for (int i = 0; i < pos_data.shape(1); i++) {
+        for (int i = 0; i < Nparticles; i++) {
             glm::mat4 transform = glm::mat4(1.0f);
             transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,1), 0.0f));
             transform = glm::scale(transform, glm::vec3(radii_data(i), radii_data(i), 1.0f));
 
-            // get matrix's uniform location and set matrix
-            transformLoc = glGetUniformLocation(ourShader.ID, "transform");
-            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-
-            transformLoc = glGetUniformLocation(ourShader.ID, "circleColor");
+            circleTransforms[i] = transform;
             int idx = i % Ncolors;
-            glUniform4f(transformLoc, color_data(idx,0), color_data(idx,1), color_data(idx,2), color_data(idx,3));
-
-            // render container
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            circleColors[i] = glm::vec4(color_data(idx,0), color_data(idx,1), color_data(idx,2), color_data(idx,3));
         }
+        glBindBuffer(GL_ARRAY_BUFFER, transformVBO);
+        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::mat4), &circleTransforms[0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::vec4), &circleColors[0], GL_STATIC_DRAW);
+
+        // render container
+        shader.use(); 
+        glBindVertexArray(VAO);
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Nparticles);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -263,7 +291,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    zoom -= 0.1*(float)yoffset;
+    zoom -= 0.05*(float)yoffset;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -272,8 +300,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         if (mouse_hold) {
             float xoffset = xpos - lastX;
             float yoffset = lastY - ypos;
-            xshift -= .005*xoffset*window_dx;
-            yshift -= .005*yoffset*window_dy;
+            xshift -= .003*xoffset*window_dx;
+            yshift -= .003*yoffset*window_dy;
         }
         mouse_hold = true;
         lastX = xpos;

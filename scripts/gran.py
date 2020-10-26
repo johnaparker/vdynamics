@@ -31,4 +31,5 @@ with h5py.File('gran.h5', 'r') as f:
     radii = f['radii'][...]
 
 colors = mpl.colors.TABLEAU_COLORS
-circle_vis(pos, radii, colors, ylim=[0,1])
+# colors = np.random.uniform(0,1, (len(radii),4))
+circle_vis(pos, radii, colors)
