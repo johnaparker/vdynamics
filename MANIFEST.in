@@ -1,0 +1,6 @@
+recursive-include sphere_vis/resources *
+
+include CMakeLists.txt
+recursive-include third_party *
+recursive-include src *
+recursive-include scripts *
