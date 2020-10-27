@@ -9,6 +9,6 @@ out vec4 circleColor;
 
 void main() {
     pos = aPos.xy;
-	gl_Position = projection * transform * vec4(aPos, 1.0);
+    gl_Position = projection * transform * vec4(aPos, 1.0);
     circleColor = color;
 }

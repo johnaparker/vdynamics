@@ -40,7 +40,7 @@ float lastX = 0;
 float lastY = 0;
 bool mouse_hold = false;
 
-int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, const std::string vshader, const std::string fshader) {
+int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, const std::string vshader, const std::string fshader) {
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -96,6 +96,9 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
     auto radii_data = radii.unchecked<1>();
     auto dims_data = dims.unchecked<2>();
     auto color_data = colors.mutable_unchecked<2>();
+    auto background_color_data = background_color.unchecked<1>();
+    auto edge_color_data = edge_color.unchecked<1>();
+
     int Ncolors = color_data.shape(0);
     int Nparticles = pos_data.shape(1);
     last_frame = pos_data.shape(0);
@@ -146,6 +149,9 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window)) {
@@ -156,7 +162,7 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
 
         // render
         // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(background_color_data(0), background_color_data(1), background_color_data(2), 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         float xmin = dims_data(0,0);
@@ -195,9 +201,17 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         window_dx = xmax - xmin;
         window_dy = ymax - ymin;
 
+        shader.use(); 
+
         glm::mat4 projection = glm::ortho(xmin, xmax, ymin, ymax, -0.1f, 0.1f);
         unsigned int transformLoc = glGetUniformLocation(shader.ID, "projection");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+
+        transformLoc = glGetUniformLocation(shader.ID, "edge_color");
+        glUniform4f(transformLoc, edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
+        glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
+
 
         for (int i = 0; i < Nparticles; i++) {
             glm::mat4 transform = glm::mat4(1.0f);
@@ -214,7 +228,6 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::vec4), &circleColors[0], GL_DYNAMIC_DRAW);
 
         // render container
-        shader.use(); 
         glBindVertexArray(VAO);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Nparticles);
 
@@ -318,7 +331,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 PYBIND11_MODULE(_vdynamics, m) {
     m.doc() = "C++/openGL module for 2D and 3D dynamic visualization";
-    m.def("circle_vis", circle_vis, "position"_a,  "radii"_a, "dims"_a, "colors"_a, "vshader"_a, "fshader"_a, 
+    m.def("circle_vis", circle_vis, "position"_a,  "radii"_a, "dims"_a, "colors"_a,  "background_color"_a,  "edge_color"_a, "linewidth"_a, "vshader"_a, "fshader"_a, 
     R"pbdoc(
          Visualize dynamics of circles (2D)
     )pbdoc");
