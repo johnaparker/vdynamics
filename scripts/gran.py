@@ -1,11 +1,11 @@
-import sphere_vis
+import vdynamics
 import numpy as np
 from time import sleep
 import h5py
 import matplotlib as mpl
 
 def circle_vis(position, radius, colors, xlim=None, ylim=None):
-    root = sphere_vis.__path__[0]
+    root = vdynamics.__path__[0]
     vshader = f'{root}/resources/shaders/circle_vis.vs'
     fshader = f'{root}/resources/shaders/circle_vis.fs'
     rgba = mpl.colors.to_rgba_array(colors)
@@ -23,10 +23,10 @@ def circle_vis(position, radius, colors, xlim=None, ylim=None):
         ymax = np.max(position[...,1]) + rmax
     dims = np.array([[xmin, xmax], [ymin, ymax]], dtype=float)
 
-    sphere_vis.circle_vis(pos, radii, dims, rgba, vshader, fshader)
+    vdynamics.circle_vis(pos, radii, dims, rgba, vshader, fshader)
 
 
-with h5py.File('gran.h5', 'r') as f:
+with h5py.File('gran3.h5', 'r') as f:
     pos = f['traj'][::100]
     radii = f['radii'][...]
 

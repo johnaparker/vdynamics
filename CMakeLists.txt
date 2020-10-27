@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.1)
 cmake_policy(VERSION 3.1)
 
-set(PROJECT_NAME _sphere_vis)
+set(PROJECT_NAME _vdynamics)
 project(${PROJECT_NAME})
 
 # set flags

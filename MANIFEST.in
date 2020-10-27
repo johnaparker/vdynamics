@@ -1,4 +1,4 @@
-recursive-include sphere_vis/resources *
+recursive-include vdynamics/resources *
 
 include CMakeLists.txt
 recursive-include third_party *

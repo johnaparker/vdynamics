@@ -11,6 +11,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
+#include <chrono>
+#include <thread>
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -206,9 +209,9 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
             circleColors[i] = glm::vec4(color_data(idx,0), color_data(idx,1), color_data(idx,2), color_data(idx,3));
         }
         glBindBuffer(GL_ARRAY_BUFFER, transformVBO);
-        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::mat4), &circleTransforms[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::mat4), &circleTransforms[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::vec4), &circleColors[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::vec4), &circleColors[0], GL_DYNAMIC_DRAW);
 
         // render container
         shader.use(); 
@@ -221,8 +224,8 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
         glfwPollEvents();
 
         float dt = glfwGetTime() - T0;
-        if (dt < .03)
-            sleep(.03 - dt);
+        if (dt < 15e-3)
+            std::this_thread::sleep_for(std::chrono::microseconds(15000 - (int)(dt*1e6)));
         if (!paused)
             current_frame += 1;
         if (current_frame >= pos_data.shape(0))
@@ -313,10 +316,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     }
 }
 
-PYBIND11_MODULE(_sphere_vis, m) {
-    m.doc() = "Sphere visualization";
+PYBIND11_MODULE(_vdynamics, m) {
+    m.doc() = "C++/openGL module for 2D and 3D dynamic visualization";
     m.def("circle_vis", circle_vis, "position"_a,  "radii"_a, "dims"_a, "colors"_a, "vshader"_a, "fshader"_a, 
     R"pbdoc(
-        Circle visualization (2D)
+         Visualize dynamics of circles (2D)
     )pbdoc");
 }
