@@ -5,14 +5,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <shader_s.hpp>
-#include <iostream>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
+#include <iostream>
 #include <chrono>
 #include <thread>
+
+#include <shader_s.hpp>
+#include <texture_s.hpp>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -193,7 +195,7 @@ void update_view(py::array_t<float> dims, unsigned int shader_ID) {
     glUniformMatrix4fv(glGetUniformLocation(shader_ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 }
 
-void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, const std::string vshader, const std::string fshader) {
+void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, std::vector<std::string> texture_files, float texture_mix, const std::string vshader, const std::string fshader) {
     // read input arrays
     auto pos_data = pos.unchecked<3>();
     auto radii_data = radii.unchecked<1>();
@@ -209,8 +211,14 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     make_window();
     bind_vetices();
     bind_attributes();
-    Shader shader = Shader(vshader, fshader);
+    Shader shader(vshader, fshader);
     shader.use(); 
+
+    // create textures
+    int Ntextures = texture_files.size();
+    std::vector<Texture> textures;
+    for (const auto& texture_file : texture_files)
+        textures.push_back(Texture(texture_file));
 
     // allocate instanced arrays
     glm::mat4* circleTransforms = new glm::mat4[Nparticles];;
@@ -219,6 +227,7 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     // set uniform data
     glUniform4f(glGetUniformLocation(shader.ID, "edge_color"), edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
     glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
+    glUniform1f(glGetUniformLocation(shader.ID, "texture_mix"), texture_mix);
 
     while (!glfwWindowShouldClose(window)) {
         float T0 = glfwGetTime();
@@ -250,6 +259,8 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
 
         // draw circles
         glBindVertexArray(VAO);
+        if (Ntextures > 0)
+            glBindTexture(GL_TEXTURE_2D, textures[0].ID);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Nparticles);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -343,7 +354,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 PYBIND11_MODULE(_vdynamics, m) {
     m.doc() = "C++/openGL module for 2D and 3D dynamic visualization";
-    m.def("circle_vis", circle_vis, "position"_a,  "radii"_a, "dims"_a, "colors"_a,  "background_color"_a,  "edge_color"_a, "linewidth"_a, "vshader"_a, "fshader"_a, 
+    m.def("circle_vis", circle_vis, "position"_a,  "radii"_a, "dims"_a, "colors"_a,  "background_color"_a,  "edge_color"_a, "linewidth"_a, "texture_files"_a, "texture_mix"_a, "vshader"_a, "fshader"_a, 
     R"pbdoc(
          Visualize dynamics of circles (2D)
     )pbdoc");

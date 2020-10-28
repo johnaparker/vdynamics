@@ -52,6 +52,10 @@ endif(WIN32)
 add_library(GLAD "third_party/glad/glad.c")
 set(LIBS ${LIBS} GLAD)
 
+# add stb_image to LIBS
+add_library(STB_IMAGE "third_party/stb_image/stb_image.cpp")
+set(LIBS ${LIBS} STB_IMAGE)
+
 # include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/third_party)
@@ -59,7 +63,8 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party)
 # set source files
 set(SOURCES ${SOURCES} 
     src/circle_vis.cpp
-    src/shader_s.cpp)
+    src/shader_s.cpp
+    src/texture_s.cpp)
 
 # set pybind11 binding files
 set(BINDINGS ) 
