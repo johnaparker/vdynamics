@@ -23,7 +23,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
-// settings
+// global variables
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 float aspect_ratio = (float)(SCR_WIDTH) / (float)(SCR_HEIGHT);
@@ -40,9 +40,12 @@ float lastX = 0;
 float lastY = 0;
 bool mouse_hold = false;
 
-int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, const std::string vshader, const std::string fshader) {
-    // glfw: initialize and configure
-    // ------------------------------
+GLFWwindow* window;
+unsigned int VBO, VAO, EBO;
+unsigned int transformVBO, colorVBO;
+
+void make_window() {
+    // initialize
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -51,66 +54,46 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "", NULL, NULL);
+    // create window
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
+        return;
     }
+
+    // set callbacks
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
+    // load OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
+        return;
     }
 
-    // build and compile our shader zprogram
-    // ------------------------------------
-    Shader shader(vshader, fshader);
+    // enable alpha blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
+void bind_vetices() {
     float vertices[] = {
-        // positions          
          1.0f,  1.0f, 0.0f,
          1.0f, -1.0f, 0.0f,
         -1.0f, -1.0f, 0.0f,
         -1.0f,  1.0f, 0.0f,
     };
     unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
+        0, 1, 3,
+        1, 2, 3
     };
 
-    auto pos_data = pos.unchecked<3>();
-    auto radii_data = radii.unchecked<1>();
-    auto dims_data = dims.unchecked<2>();
-    auto color_data = colors.mutable_unchecked<2>();
-    auto background_color_data = background_color.unchecked<1>();
-    auto edge_color_data = edge_color.unchecked<1>();
-
-    int Ncolors = color_data.shape(0);
-    int Nparticles = pos_data.shape(1);
-    last_frame = pos_data.shape(0);
-
-    glm::mat4* circleTransforms = new glm::mat4[Nparticles];;
-    glm::vec4* circleColors = new glm::vec4[Nparticles];
-
-    unsigned int transformVBO, colorVBO;
-    glGenBuffers(1, &transformVBO);
-    glGenBuffers(1, &colorVBO);
-
-    unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -122,6 +105,11 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+}
+
+void bind_attributes() {
+    glGenBuffers(1, &transformVBO);
+    glGenBuffers(1, &colorVBO);
 
     // position attribute
     glEnableVertexAttribArray(0);
@@ -148,71 +136,102 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
     glVertexAttribDivisor(5, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+void close_window() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &transformVBO);
+    glDeleteBuffers(1, &colorVBO);
+    glfwTerminate();
+}
 
-    // render loop
-    // -----------
+void update_view(py::array_t<float> dims, unsigned int shader_ID) {
+    auto dims_data = dims.unchecked<2>();
+
+    float xmin = dims_data(0,0);
+    float xmax = dims_data(0,1);
+    float ymin = dims_data(1,0);
+    float ymax = dims_data(1,1);
+    float dx = xmax - xmin;
+    float dy = ymax - ymin;
+
+    // zoom in/out
+    if (zoom >= 0) {
+        xmin = (xmin + xshift) + dx/2*(1 - 1/(1+pow(zoom,2)));
+        xmax = (xmax + xshift) - dx/2*(1 - 1/(1+pow(zoom,2)));
+        ymin = (ymin + yshift) + dy/2*(1 - 1/(1+pow(zoom,2)));
+        ymax = (ymax + yshift) - dy/2*(1 - 1/(1+pow(zoom,2)));
+    }
+    else {
+        xmin = (xmin + xshift) + dx/2*(zoom);
+        xmax = (xmax + xshift) - dx/2*(zoom);
+        ymin = (ymin + yshift) + dy/2*(zoom);
+        ymax = (ymax + yshift) - dy/2*(zoom);
+    }
+
+    // maintain aspect ratio
+    dx = xmax - xmin;
+    dy = ymax - ymin; 
+    if (dx/dy > aspect_ratio) {
+        float buff = dx/aspect_ratio - dy;
+        ymax = ymax + buff/2;
+        ymin = ymin - buff/2;
+    }
+    else if (dx/dy < aspect_ratio) {
+        float buff = dy*aspect_ratio - dx;
+        xmax = xmax + buff/2;
+        xmin = xmin - buff/2;
+    }
+
+    window_dx = xmax - xmin;
+    window_dy = ymax - ymin;
+
+    // set uniform projection matrix
+    glm::mat4 projection = glm::ortho(xmin, xmax, ymin, ymax, -0.1f, 0.1f);
+    glUniformMatrix4fv(glGetUniformLocation(shader_ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, const std::string vshader, const std::string fshader) {
+    // read input arrays
+    auto pos_data = pos.unchecked<3>();
+    auto radii_data = radii.unchecked<1>();
+    auto color_data = colors.mutable_unchecked<2>();
+    auto background_color_data = background_color.unchecked<1>();
+    auto edge_color_data = edge_color.unchecked<1>();
+
+    int Ncolors = color_data.shape(0);
+    int Nparticles = pos_data.shape(1);
+    last_frame = pos_data.shape(0);
+
+    // initialize OpenGL
+    make_window();
+    bind_vetices();
+    bind_attributes();
+    Shader shader = Shader(vshader, fshader);
+    shader.use(); 
+
+    // allocate instanced arrays
+    glm::mat4* circleTransforms = new glm::mat4[Nparticles];;
+    glm::vec4* circleColors = new glm::vec4[Nparticles];
+
+    // set uniform data
+    glUniform4f(glGetUniformLocation(shader.ID, "edge_color"), edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
+    glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
+
     while (!glfwWindowShouldClose(window)) {
         float T0 = glfwGetTime();
-        // input
-        // -----
-        processInput(window);
 
-        // render
-        // ------
+        // user feedback
+        processInput(window);
+        update_view(dims, shader.ID);
+
+        // set background color
         glClearColor(background_color_data(0), background_color_data(1), background_color_data(2), 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float xmin = dims_data(0,0);
-        float xmax = dims_data(0,1);
-        float ymin = dims_data(1,0);
-        float ymax = dims_data(1,1);
-        float dx = xmax - xmin;
-        float dy = ymax - ymin;
-
-        if (zoom >= 0) {
-            xmin = (xmin + xshift) + dx/2*(1 - 1/(1+pow(zoom,2)));
-            xmax = (xmax + xshift) - dx/2*(1 - 1/(1+pow(zoom,2)));
-            ymin = (ymin + yshift) + dy/2*(1 - 1/(1+pow(zoom,2)));
-            ymax = (ymax + yshift) - dy/2*(1 - 1/(1+pow(zoom,2)));
-        }
-        else {
-            xmin = (xmin + xshift) + dx/2*(zoom);
-            xmax = (xmax + xshift) - dx/2*(zoom);
-            ymin = (ymin + yshift) + dy/2*(zoom);
-            ymax = (ymax + yshift) - dy/2*(zoom);
-        }
-
-        dx = xmax - xmin;
-        dy = ymax - ymin; 
-        if (dx/dy > aspect_ratio) {
-            float buff = dx/aspect_ratio - dy;
-            ymax = ymax + buff/2;
-            ymin = ymin - buff/2;
-        }
-        else if (dx/dy < aspect_ratio) {
-            float buff = dy*aspect_ratio - dx;
-            xmax = xmax + buff/2;
-            xmin = xmin - buff/2;
-        }
-
-        window_dx = xmax - xmin;
-        window_dy = ymax - ymin;
-
-        shader.use(); 
-
-        glm::mat4 projection = glm::ortho(xmin, xmax, ymin, ymax, -0.1f, 0.1f);
-        unsigned int transformLoc = glGetUniformLocation(shader.ID, "projection");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-
-        transformLoc = glGetUniformLocation(shader.ID, "edge_color");
-        glUniform4f(transformLoc, edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
-        glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
-
-
+        // set instanced data for all particles
         for (int i = 0; i < Nparticles; i++) {
             glm::mat4 transform = glm::mat4(1.0f);
             transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,1), 0.0f));
@@ -222,39 +241,32 @@ int circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<flo
             int idx = i % Ncolors;
             circleColors[i] = glm::vec4(color_data(idx,0), color_data(idx,1), color_data(idx,2), color_data(idx,3));
         }
+
+        // copy instanced data to GPU
         glBindBuffer(GL_ARRAY_BUFFER, transformVBO);
         glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::mat4), &circleTransforms[0], GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
         glBufferData(GL_ARRAY_BUFFER, Nparticles * sizeof(glm::vec4), &circleColors[0], GL_DYNAMIC_DRAW);
 
-        // render container
+        // draw circles
         glBindVertexArray(VAO);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Nparticles);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
 
+        // maintrain framerate
         float dt = glfwGetTime() - T0;
         if (dt < 15e-3)
             std::this_thread::sleep_for(std::chrono::microseconds(15000 - (int)(dt*1e6)));
+
+        // playback
         if (!paused)
             current_frame += 1;
         if (current_frame >= pos_data.shape(0))
             current_frame = 0;
     }
 
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
-    glfwTerminate();
-    return 0;
+    close_window();
 }
 
 void processInput(GLFWwindow *window) {

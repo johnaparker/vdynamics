@@ -5,7 +5,8 @@
 
 class Shader {
 public:
-    Shader(const std::string vertexPath, const std::string fragmentPath);
+    Shader();
+    Shader(const std::string vshader, const std::string fshader);
     void use();
     void setBool(const std::string &name, bool value) const;
     void setInt(const std::string &name, int value) const;

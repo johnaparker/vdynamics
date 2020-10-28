@@ -8,5 +8,6 @@ with h5py.File('gran3.h5', 'r') as f:
 
 colors = mpl.colors.TABLEAU_COLORS
 colors = mpl.colors.to_rgba_array(colors)
-vdynamics.animate_2d(pos, 1*radii, colors, background_color='white', linewidth=0, edge_color='k')
+colors[:,-1] = .5
+vdynamics.animate_2d(pos, 1.2*radii, colors, background_color='white', linewidth=0.1, edge_color='k')
 # vdynamics.animate_2d(pos, 1*radii, colors)
