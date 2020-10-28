@@ -9,16 +9,17 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 NAME = 'vdynamics'
-DESCRIPTION = ''
-URL = ''
-EMAIL = ''
-AUTHOR = ''
+DESCRIPTION = 'Realtime visualization of 2D and 3D dynamics of a large number of objects'
+URL = 'https://github.com/johnaparker/vdynamics'
+EMAIL = 'john7494@gmail.com'
+AUTHOR = 'John Parker'
 KEYWORDS = ''
 VERSION = '0.1'
-LICENSE = ''
+LICENSE = 'MIT'
 
 REQUIRED = [
-    'numpy', 
+    'numpy',
+    'matplotlib',
 ]
 
 
