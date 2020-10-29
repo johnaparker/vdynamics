@@ -54,7 +54,8 @@ set(LIBS ${LIBS} GLAD)
 
 # add stb_image to LIBS
 add_library(STB_IMAGE "third_party/stb_image/stb_image.cpp")
-set(LIBS ${LIBS} STB_IMAGE)
+add_library(STB_IMAGE_WRITE "third_party/stb_image/stb_image_write.cpp")
+set(LIBS ${LIBS} STB_IMAGE STB_IMAGE_WRITE)
 
 # include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -64,7 +65,8 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party)
 set(SOURCES ${SOURCES} 
     src/circle_vis.cpp
     src/shader_s.cpp
-    src/texture_s.cpp)
+    src/texture_s.cpp
+    src/file_io.cpp)
 
 # set pybind11 binding files
 set(BINDINGS ) 
