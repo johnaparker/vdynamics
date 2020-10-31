@@ -48,7 +48,7 @@ float lastX = 0;
 float lastY = 0;
 bool mouse_hold = false;
 bool firstMouse = true;
-int precision = 2;
+int mesh_level = 2;
 
 GLFWwindow* window;
 unsigned int VBO, VAO, EBO;
@@ -89,9 +89,9 @@ void make_window() {
     }
 
     // enable alpha blending
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
 }
 
 void bind_vetices() {
@@ -100,7 +100,7 @@ void bind_vetices() {
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
-    sphere(VBO, EBO, precision);
+    sphere(VBO, EBO, mesh_level);
 }
 
 void bind_attributes() {
@@ -181,13 +181,17 @@ void sphere_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     glm::vec4* circleColors = new glm::vec4[Nparticles];
 
     // set uniform data
-    glUniform1f(glGetUniformLocation(shader.ID, "texture_mix"), texture_mix);
+    shader.setFloat("texture_mix", texture_mix);
+
     while (!glfwWindowShouldClose(window)) {
         float T0 = glfwGetTime();
 
         // user feedback
         processInput(window);
         update_view(shader.ID);
+
+        shader.setVec3("lightPos", camera.Position);
+        shader.setVec3("viewPos", camera.Position);
 
         // set background color
         glClearColor(background_color_data(0), background_color_data(1), background_color_data(2), 1.0);
@@ -214,7 +218,7 @@ void sphere_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
         glBindVertexArray(VAO);
         if (Ntextures > 0)
             glBindTexture(GL_TEXTURE_2D, textures[0].ID);
-        glDrawElementsInstanced(GL_TRIANGLES, 60*pow(4, precision), GL_UNSIGNED_INT, 0, Nparticles);
+        glDrawElementsInstanced(GL_TRIANGLES, 60*pow(4, mesh_level), GL_UNSIGNED_INT, 0, Nparticles);
         glfwSwapBuffers(window);
         glfwPollEvents();
 
@@ -265,6 +269,10 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {

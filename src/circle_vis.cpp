@@ -226,7 +226,6 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     glUniform4f(glGetUniformLocation(shader.ID, "edge_color"), edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
     glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
     glUniform1f(glGetUniformLocation(shader.ID, "texture_mix"), texture_mix);
-
     while (!glfwWindowShouldClose(window)) {
         float T0 = glfwGetTime();
 
