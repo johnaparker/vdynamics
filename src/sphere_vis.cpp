@@ -5,17 +5,23 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
 #include <iostream>
 #include <chrono>
 #include <thread>
 
 #include <shader_s.hpp>
 #include <texture_s.hpp>
+#include <camera.hpp>
 
 #include "file_io.hpp"
-#include "circle_vis.hpp"
+#include "sphere_vis.hpp"
+#include "geometry/geometry.hpp"
 
-namespace vis_2d {
+namespace vis_3d {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -24,6 +30,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // global variables
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+const float deltaTime = 1.0/60.0;
 unsigned int SCR_WIDTH = 800;
 unsigned int SCR_HEIGHT = 600;
 float aspect_ratio = (float)(SCR_WIDTH) / (float)(SCR_HEIGHT);
@@ -39,6 +47,8 @@ float zoom = 0;
 float lastX = 0;
 float lastY = 0;
 bool mouse_hold = false;
+bool firstMouse = true;
+int precision = 2;
 
 GLFWwindow* window;
 unsigned int VBO, VAO, EBO;
@@ -69,6 +79,7 @@ void make_window() {
     glfwSetKeyCallback(window, key_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // load OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -80,31 +91,16 @@ void make_window() {
     // enable alpha blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void bind_vetices() {
-    float vertices[] = {
-         1.0f,  1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-    };
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    sphere(VBO, EBO, precision);
 }
 
 void bind_attributes() {
@@ -147,59 +143,21 @@ void close_window() {
     glfwTerminate();
 }
 
-void update_view(py::array_t<float> dims, unsigned int shader_ID) {
-    auto dims_data = dims.unchecked<2>();
-
-    float xmin = dims_data(0,0);
-    float xmax = dims_data(0,1);
-    float ymin = dims_data(1,0);
-    float ymax = dims_data(1,1);
-    float dx = xmax - xmin;
-    float dy = ymax - ymin;
-
-    // zoom in/out
-    if (zoom >= 0) {
-        xmin = (xmin + xshift) + dx/2*(1 - 1/(1+pow(zoom,2)));
-        xmax = (xmax + xshift) - dx/2*(1 - 1/(1+pow(zoom,2)));
-        ymin = (ymin + yshift) + dy/2*(1 - 1/(1+pow(zoom,2)));
-        ymax = (ymax + yshift) - dy/2*(1 - 1/(1+pow(zoom,2)));
-    }
-    else {
-        xmin = (xmin + xshift) + dx/2*(zoom);
-        xmax = (xmax + xshift) - dx/2*(zoom);
-        ymin = (ymin + yshift) + dy/2*(zoom);
-        ymax = (ymax + yshift) - dy/2*(zoom);
-    }
-
-    // maintain aspect ratio
-    dx = xmax - xmin;
-    dy = ymax - ymin; 
-    if (dx/dy > aspect_ratio) {
-        float buff = dx/aspect_ratio - dy;
-        ymax = ymax + buff/2;
-        ymin = ymin - buff/2;
-    }
-    else if (dx/dy < aspect_ratio) {
-        float buff = dy*aspect_ratio - dx;
-        xmax = xmax + buff/2;
-        xmin = xmin - buff/2;
-    }
-
-    window_dx = xmax - xmin;
-    window_dy = ymax - ymin;
-
+void update_view(unsigned int shader_ID) {
     // set uniform projection matrix
-    glm::mat4 projection = glm::ortho(xmin, xmax, ymin, ymax, -0.1f, 0.1f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspect_ratio, 0.01f, 100.0f);
     glUniformMatrix4fv(glGetUniformLocation(shader_ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader_ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 }
 
-void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, py::array_t<float> edge_color, float linewidth, std::vector<std::string> texture_files, float texture_mix, const std::string vshader, const std::string fshader) {
+void sphere_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<float> dims, py::array_t<float> colors, py::array_t<float> background_color, std::vector<std::string> texture_files, float texture_mix, const std::string vshader, const std::string fshader) {
     // read input arrays
     auto pos_data = pos.unchecked<3>();
     auto radii_data = radii.unchecked<1>();
     auto color_data = colors.mutable_unchecked<2>();
     auto background_color_data = background_color.unchecked<1>();
-    auto edge_color_data = edge_color.unchecked<1>();
 
     int Ncolors = color_data.shape(0);
     int Nparticles = pos_data.shape(1);
@@ -223,26 +181,23 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     glm::vec4* circleColors = new glm::vec4[Nparticles];
 
     // set uniform data
-    glUniform4f(glGetUniformLocation(shader.ID, "edge_color"), edge_color_data(0), edge_color_data(1), edge_color_data(2), edge_color_data(3));
-    glUniform1f(glGetUniformLocation(shader.ID, "linewidth"), pow(1-linewidth,2));
     glUniform1f(glGetUniformLocation(shader.ID, "texture_mix"), texture_mix);
-
     while (!glfwWindowShouldClose(window)) {
         float T0 = glfwGetTime();
 
         // user feedback
         processInput(window);
-        update_view(dims, shader.ID);
+        update_view(shader.ID);
 
         // set background color
         glClearColor(background_color_data(0), background_color_data(1), background_color_data(2), 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
         // set instanced data for all particles
         for (int i = 0; i < Nparticles; i++) {
             glm::mat4 transform = glm::mat4(1.0f);
-            transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,1), 0.0f));
-            transform = glm::scale(transform, glm::vec3(radii_data(i), radii_data(i), 1.0f));
+            transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,1), pos_data(current_frame,i,2)));
+            transform = glm::scale(transform, glm::vec3(radii_data(i), radii_data(i), radii_data(i)));
 
             circleTransforms[i] = transform;
             int idx = i % Ncolors;
@@ -259,7 +214,7 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
         glBindVertexArray(VAO);
         if (Ntextures > 0)
             glBindTexture(GL_TEXTURE_2D, textures[0].ID);
-        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, Nparticles);
+        glDrawElementsInstanced(GL_TRIANGLES, 60*pow(4, precision), GL_UNSIGNED_INT, 0, Nparticles);
         glfwSwapBuffers(window);
         glfwPollEvents();
 
@@ -278,9 +233,9 @@ void circle_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
     close_window();
 }
 
-void processInput(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS
-     || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -301,18 +256,15 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         current_frame = last_frame-1;
 
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        xshift -= .02*window_dx;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        xshift += .02*window_dx;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        yshift -= .02*window_dy;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        yshift += .02*window_dy;
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        zoom -= .1;
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        zoom += .1;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -331,26 +283,23 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    zoom -= 0.05*(float)yoffset;
+    camera.ProcessMouseScroll(yoffset);
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) { 
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-        if (mouse_hold) {
-            float xoffset = xpos - lastX;
-            float yoffset = lastY - ypos;
-            xshift -= .003*xoffset*window_dx;
-            yshift -= .003*yoffset*window_dy;
-        }
-        mouse_hold = true;
+    if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
+        firstMouse = false;
     }
-    else {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        mouse_hold = false;
-    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 }

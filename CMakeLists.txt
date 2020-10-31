@@ -64,12 +64,16 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party)
 # set source files
 set(SOURCES ${SOURCES} 
     src/circle_vis.cpp
+    src/sphere_vis.cpp
     src/shader_s.cpp
     src/texture_s.cpp
-    src/file_io.cpp)
+    src/file_io.cpp
+    src/camera.cpp
+    src/geometry/sphere.cpp)
 
 # set pybind11 binding files
-set(BINDINGS ) 
+set(BINDINGS 
+    src/main_pyb.cpp) 
 
 # create shared library 
 add_library(${PROJECT_NAME} MODULE "${SOURCES}" "${BINDINGS}")
