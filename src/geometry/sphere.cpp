@@ -1,7 +1,8 @@
 #include <vector>
-#include <glm/glm.hpp>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "geometry.hpp"
+#include <glm/glm.hpp>
 
 using namespace std;
 

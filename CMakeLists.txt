@@ -50,11 +50,14 @@ endif(WIN32)
 
 # add GLAD to LIBS
 add_library(GLAD "third_party/glad/glad.c")
+set_property(TARGET GLAD PROPERTY POSITION_INDEPENDENT_CODE ON)
 set(LIBS ${LIBS} GLAD)
 
 # add stb_image to LIBS
 add_library(STB_IMAGE "third_party/stb_image/stb_image.cpp")
+set_property(TARGET STB_IMAGE PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(STB_IMAGE_WRITE "third_party/stb_image/stb_image_write.cpp")
+set_property(TARGET STB_IMAGE_WRITE PROPERTY POSITION_INDEPENDENT_CODE ON)
 set(LIBS ${LIBS} STB_IMAGE STB_IMAGE_WRITE)
 
 # include directories

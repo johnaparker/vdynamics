@@ -1,4 +1,5 @@
 # - Try to find Assimp
+
 # Once done, this will define
 #
 # ASSIMP_FOUND - system has Assimp
@@ -8,7 +9,7 @@ FIND_PATH( ASSIMP_INCLUDE_DIR assimp/mesh.h
 	/usr/include
 	/usr/local/include
 	/opt/local/include
-	${CMAKE_SOURCE_DIR}/includes
+	${CMAKE_SOURCE_DIR}/third_party
 )
 FIND_LIBRARY( ASSIMP_LIBRARY assimp
 	/usr/lib64
