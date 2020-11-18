@@ -200,7 +200,7 @@ void sphere_vis(py::array_t<float> pos, py::array_t<float> radii, py::array_t<fl
         // set instanced data for all particles
         for (int i = 0; i < Nparticles; i++) {
             glm::mat4 transform = glm::mat4(1.0f);
-            transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,1), pos_data(current_frame,i,2)));
+            transform = glm::translate(transform, glm::vec3(pos_data(current_frame,i,0), pos_data(current_frame,i,2), pos_data(current_frame,i,1)));
             transform = glm::scale(transform, glm::vec3(radii_data(i), radii_data(i), radii_data(i)));
 
             circleTransforms[i] = transform;
