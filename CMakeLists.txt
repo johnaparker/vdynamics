@@ -71,6 +71,7 @@ set(SOURCES ${SOURCES}
     src/shader_s.cpp
     src/texture_s.cpp
     src/file_io.cpp
+    src/vis3d.cpp
     src/camera.cpp
     src/geometry/sphere.cpp)
 

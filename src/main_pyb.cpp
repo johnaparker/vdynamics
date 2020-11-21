@@ -1,5 +1,6 @@
 #include "circle_vis.hpp"
 #include "sphere_vis.hpp"
+#include "vis3d.hpp"
 
 using namespace pybind11::literals;
 
@@ -13,4 +14,8 @@ PYBIND11_MODULE(_vdynamics, m) {
     R"pbdoc(
          Visualize dynamics of spheres (3D)
     )pbdoc");
+
+    py::class_<Scene>(m, "Scene")
+        .def(py::init<py::array_t<float>, py::array_t<unsigned int>>(), "background"_a, "window_size"_a)
+        .def("run", &Scene::run);
 }
