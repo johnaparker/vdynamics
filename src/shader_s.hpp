@@ -6,7 +6,7 @@
 
 class Shader {
 public:
-    Shader();
+    Shader() {};
     Shader(const std::string vshader, const std::string fshader);
     void use();
     void setBool(const std::string &name, bool value) const;

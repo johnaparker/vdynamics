@@ -60,6 +60,9 @@ Window::Window(unsigned int width, unsigned int height): width(width), height(he
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_CULL_FACE);  
+    glCullFace(GL_BACK);  
 }
 
 void Window::set_window_size(unsigned int w, unsigned int h) {
@@ -79,16 +82,51 @@ Scene::Scene(py::array_t<float> background, py::array_t<unsigned int> window_siz
 
     auto window_size_data = window_size.unchecked<1>();
     window = Window(window_size_data(0), window_size_data(1));
+
+    camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 }
 
-void Scene::run() {
+void Scene::run(std::function<void(int)> callback, int frames) {
+    int current_frame = 0;
+
     while (!glfwWindowShouldClose(window.window)) {
+        callback(current_frame);
+
         process_input();
         glClearColor(background_color.r, background_color.g, background_color.b, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+
+        for (auto& obj: objects) {
+            update_view(obj->shader);
+            obj->draw();
+        }
+
         glfwSwapBuffers(window.window);
         glfwPollEvents();
+
+        current_frame++;
+        if (current_frame >= frames)
+            current_frame = 0;
     }
+
+    window.close();
+}
+
+void Scene::update_view(Shader& shader) {
+    shader.setVec3("lightPos", camera.Position);
+    shader.setVec3("viewPos", camera.Position);
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), window.aspect_ratio, 0.01f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+}
+
+void Scene::draw(RenderingObject& obj) {
+    obj.bind_vertex_data();
+    obj.bind_attribute_data();
+    objects.push_back(&obj);
 }
 
 void Scene::process_input() {

@@ -14,6 +14,7 @@ endif()
 
 # find packages
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/third_party/cmake")
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(GLM REQUIRED)
 message(STATUS "GLM included at ${GLM_INCLUDE_DIR}")
 find_package(GLFW3 REQUIRED)
@@ -66,13 +67,11 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party)
 
 # set source files
 set(SOURCES ${SOURCES} 
-    src/circle_vis.cpp
-    src/sphere_vis.cpp
     src/shader_s.cpp
     src/texture_s.cpp
     src/file_io.cpp
-    src/vis3d.cpp
     src/camera.cpp
+    src/vis3d.cpp
     src/geometry/sphere.cpp)
 
 # set pybind11 binding files
@@ -81,6 +80,6 @@ set(BINDINGS
 
 # create shared library 
 add_library(${PROJECT_NAME} MODULE "${SOURCES}" "${BINDINGS}")
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} pybind11::module)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} pybind11::module Eigen3::Eigen)
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
                                      SUFFIX "${PYTHON_MODULE_EXTENSION}")

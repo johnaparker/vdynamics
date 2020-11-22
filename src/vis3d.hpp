@@ -6,10 +6,14 @@
 #include <pybind11/stl.h>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+
+#include "geometry/geometry.hpp"
+#include <camera.hpp>
 
 namespace py = pybind11;
 
@@ -36,8 +40,6 @@ public:
 public:
     GLFWwindow* window;
     float delta_time = 1.0/60.0;
-
-private:
     unsigned int width;
     unsigned int height;
     float aspect_ratio;
@@ -47,21 +49,20 @@ class Scene {
 public:
     Scene(py::array_t<float> background, py::array_t<unsigned int> window_size);
 
-    void run();
-    //void draw(Object obj);
-    //void run(std::function<> callback);
+    void draw(RenderingObject& obj);
+    void run(std::function<void(int)> callback, int frames);
 
 private:
     void process_input();
-    //void update_view();
+    void update_view(Shader& shader);
 
 private:
     glm::vec3 background_color;
     Window window;
+    Camera camera;
     //Mouse mouse;
-    //Camera camera;
 
-    //std::vector<Object> objects;
+    std::vector<RenderingObject*> objects;
     //bool paused;
     //int current_frame;
     //int last_frame;
