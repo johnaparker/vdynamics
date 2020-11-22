@@ -1,4 +1,3 @@
-Write window callback functions (need to access local rather than global scope)
 Programmable camera
 Programmable light source
 Scene should keep track of all shaders, and write Uniform data to each of them per draw loop

@@ -18,11 +18,6 @@
 #include "vis3d.hpp"
 #include "geometry/geometry.hpp"
 
-void window_size_callback(GLFWwindow* window, int width, int height);
-//void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-//void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-//void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-
 Window::Window(unsigned int width, unsigned int height): width(width), height(height) {
     aspect_ratio = (float)(width) / (float)(height);
 
@@ -45,9 +40,9 @@ Window::Window(unsigned int width, unsigned int height): width(width), height(he
     // set callbacks
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, window_size_callback);
-    //glfwSetKeyCallback(window, key_callback);
-    //glfwSetScrollCallback(window, scroll_callback);
-    //glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // load OpenGL function pointers
@@ -84,11 +79,12 @@ Scene::Scene(py::array_t<float> background, py::array_t<unsigned int> window_siz
     window = Window(window_size_data(0), window_size_data(1));
 
     camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+    glfwSetWindowUserPointer(window.window, reinterpret_cast<void *>(this));
 }
 
 void Scene::run(std::function<void(int)> callback, int frames) {
-    int current_frame = 0;
-
+    last_frame = frames;
     while (!glfwWindowShouldClose(window.window)) {
         callback(current_frame);
 
@@ -104,8 +100,9 @@ void Scene::run(std::function<void(int)> callback, int frames) {
         glfwSwapBuffers(window.window);
         glfwPollEvents();
 
-        current_frame++;
-        if (current_frame >= frames)
+        if (!paused)
+            current_frame++;
+        if (current_frame >= last_frame)
             current_frame = 0;
     }
 
@@ -133,67 +130,75 @@ void Scene::process_input() {
     if (glfwGetKey(window.window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window.window, true);
 
-    //if (glfwGetKey(window.window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        //current_frame += 1;
-        //if (current_frame >= last_frame)
-            //current_frame = 0;
-    //}
+    if (glfwGetKey(window.window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        current_frame += 1;
+        if (current_frame >= last_frame)
+            current_frame = 0;
+    }
 
-    //if (glfwGetKey(window.window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        //current_frame -= 1;
-        //if (current_frame < 0)
-            //current_frame = 0;
-    //}
+    if (glfwGetKey(window.window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        current_frame -= 1;
+        if (current_frame < 0)
+            current_frame = 0;
+    }
 
-    //if (glfwGetKey(window.window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        //current_frame = 0;
+    if (glfwGetKey(window.window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        current_frame = 0;
 
-    //if (glfwGetKey(window.window, GLFW_KEY_UP) == GLFW_PRESS)
-        //current_frame = last_frame-1;
+    if (glfwGetKey(window.window, GLFW_KEY_UP) == GLFW_PRESS)
+        current_frame = last_frame-1;
 
-    //if (glfwGetKey(window.window, GLFW_KEY_W) == GLFW_PRESS)
-        //camera.ProcessKeyboard(FORWARD, window.delta_time);
-    //if (glfwGetKey(window.window, GLFW_KEY_S) == GLFW_PRESS)
-        //camera.ProcessKeyboard(BACKWARD, window.delta_time);
-    //if (glfwGetKey(window.window, GLFW_KEY_A) == GLFW_PRESS)
-        //camera.ProcessKeyboard(LEFT, window.delta_time);
-    //if (glfwGetKey(window.window, GLFW_KEY_D) == GLFW_PRESS)
-        //camera.ProcessKeyboard(RIGHT, window.delta_time);
-    //if (glfwGetKey(window.window, GLFW_KEY_E) == GLFW_PRESS)
-        //camera.ProcessKeyboard(UP, window.delta_time);
-    //if (glfwGetKey(window.window, GLFW_KEY_Q) == GLFW_PRESS)
-        //camera.ProcessKeyboard(DOWN, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, window.delta_time);
+    if (glfwGetKey(window.window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, window.delta_time);
 }
 
 
-//void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    //if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-        //paused = !paused;
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    Scene* scene = reinterpret_cast<Scene*>(glfwGetWindowUserPointer(window));
 
-    //if (key == GLFW_KEY_C && action == GLFW_PRESS)
-        //output_current_window(window, "vdynamics.png");
-//}
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        scene->paused = !scene->paused;
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+        output_current_window(window, "vdynamics.png");
+}
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
+    Scene* scene = reinterpret_cast<Scene*>(glfwGetWindowUserPointer(window));
     glViewport(0, 0, width, height);
+    scene->window.set_window_size(width, height);
 }
 
-//void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    //camera.ProcessMouseScroll(yoffset);
-//}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    Scene* scene = reinterpret_cast<Scene*>(glfwGetWindowUserPointer(window));
+    scene->camera.ProcessMouseScroll(yoffset);
+}
 
-//void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    //if (firstMouse) {
-        //lastX = xpos;
-        //lastY = ypos;
-        //firstMouse = false;
-    //}
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    Scene* scene = reinterpret_cast<Scene*>(glfwGetWindowUserPointer(window));
+    auto& mouse = scene->mouse;
 
-    //float xoffset = xpos - lastX;
-    //float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    if (mouse.first) {
+        mouse.lastX = xpos;
+        mouse.lastY = ypos;
+        mouse.first = false;
+    }
 
-    //lastX = xpos;
-    //lastY = ypos;
+    float xoffset = xpos - mouse.lastX;
+    float yoffset = mouse.lastY - ypos;
 
-    //camera.ProcessMouseMovement(xoffset, yoffset);
-//}
+    mouse.lastX = xpos;
+    mouse.lastY = ypos;
+
+    scene->camera.ProcessMouseMovement(xoffset, yoffset);
+}

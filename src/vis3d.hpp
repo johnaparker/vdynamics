@@ -17,7 +17,12 @@
 
 namespace py = pybind11;
 
-class Mouse {
+void window_size_callback(GLFWwindow* window, int width, int height);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
+struct Mouse {
     float xshift = 0;
     float yshift = 0;
     float window_dx = 0;
@@ -26,9 +31,8 @@ class Mouse {
     float lastX = 0;
     float lastY = 0;
     bool mouse_hold = false;
-    bool firstMouse = true;
+    bool first = true;
 };
-
 
 class Window {
 public:
@@ -56,16 +60,16 @@ private:
     void process_input();
     void update_view(Shader& shader);
 
-private:
+public:
     glm::vec3 background_color;
     Window window;
     Camera camera;
-    //Mouse mouse;
+    Mouse mouse;
 
     std::vector<RenderingObject*> objects;
-    //bool paused;
-    //int current_frame;
-    //int last_frame;
+    bool paused = false;
+    int current_frame = 0;
+    int last_frame = 0;
 };
 
 #endif
