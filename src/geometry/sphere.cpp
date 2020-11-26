@@ -8,7 +8,7 @@
 
 using namespace std;
 
-RenderingObject::RenderingObject(vec4 color): color(glm::make_vec4(color.data())) {
+RenderingObject::RenderingObject(vec4 color): color(color) {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -131,7 +131,7 @@ void Sphere::draw() {
     model = glm::scale(model, glm::vec3(radius));
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-    glUniform4fv(glGetUniformLocation(shader.ID, "color"), 1, glm::value_ptr(color));
+    glUniform4fv(glGetUniformLocation(shader.ID, "color"), 1, color.data());
 
     glDrawElements(GL_TRIANGLES, 60*pow(4, 2), GL_UNSIGNED_INT, 0);
     position_glm.x += .001;

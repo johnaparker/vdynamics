@@ -11,12 +11,12 @@ PYBIND11_MODULE(_vdynamics, m) {
 
     py::class_<Camera>(m, "Camera")
         .def(py::init<vec3,vec3,float,float>(), "position"_a, "up"_a, "yaw"_a, "pitch"_a)
-        .def_readwrite("position", &Camera::position)
+        .def_property("position", &Camera::get_position, &Camera::set_position)
         .def_readwrite("yaw", &Camera::Yaw);
 
     py::class_<PointLight, std::shared_ptr<PointLight>>(m, "PointLight")
         .def(py::init<vec3>(), "position"_a)
-        .def_readwrite("position", &PointLight::position);
+        .def_property("position", &PointLight::get_position, &PointLight::set_position);
 
     py::class_<RenderingObject>(m, "RenderingObject")
         .def("setShader", &RenderingObject::setShader, "vshader"_a, "fshader"_a)
@@ -25,7 +25,7 @@ PYBIND11_MODULE(_vdynamics, m) {
     py::class_<Sphere, RenderingObject>(m, "Sphere")
         .def(py::init<vec3, float, vec4>(), "position"_a, "radius"_a, "color"_a)
         .def_readwrite("radius", &Sphere::radius)
-        .def_readwrite("position", &Sphere::position);
+        .def_property("position", &Sphere::get_position, &Sphere::set_position);
 
     py::class_<Scene>(m, "Scene")
         .def(py::init<py::array_t<float>, py::array_t<unsigned int>>(), "background"_a, "window_size"_a)
