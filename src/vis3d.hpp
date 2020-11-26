@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -49,11 +50,16 @@ public:
     float aspect_ratio;
 };
 
+struct PointLight {
+    vec3 position;
+};
+
 class Scene {
 public:
     Scene(py::array_t<float> background, py::array_t<unsigned int> window_size);
 
     void draw(RenderingObject& obj);
+    void add_light(std::shared_ptr<PointLight> light);
     void run(std::function<void(int)> callback, int frames);
 
 private:
@@ -67,6 +73,8 @@ public:
     Mouse mouse;
 
     std::vector<RenderingObject*> objects;
+    std::shared_ptr<PointLight> light;
+
     bool paused = false;
     int current_frame = 0;
     int last_frame = 0;

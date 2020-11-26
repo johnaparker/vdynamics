@@ -78,7 +78,7 @@ Scene::Scene(py::array_t<float> background, py::array_t<unsigned int> window_siz
     auto window_size_data = window_size.unchecked<1>();
     window = Window(window_size_data(0), window_size_data(1));
 
-    camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    camera = Camera(vec3(0.0f, 0.0f, 3.0f));
 
     glfwSetWindowUserPointer(window.window, reinterpret_cast<void *>(this));
 }
@@ -89,6 +89,7 @@ void Scene::run(std::function<void(int)> callback, int frames) {
         callback(current_frame);
 
         process_input();
+        camera.updateCameraVectors();
         glClearColor(background_color.r, background_color.g, background_color.b, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
@@ -110,8 +111,10 @@ void Scene::run(std::function<void(int)> callback, int frames) {
 }
 
 void Scene::update_view(Shader& shader) {
-    shader.setVec3("lightPos", camera.Position);
-    shader.setVec3("viewPos", camera.Position);
+    auto glm_position = glm::make_vec3(light->position.data());
+    shader.setVec3("lightPos", glm_position);
+    glm_position = glm::make_vec3(camera.position.data());
+    shader.setVec3("viewPos", glm_position);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), window.aspect_ratio, 0.01f, 100.0f);
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -124,6 +127,10 @@ void Scene::draw(RenderingObject& obj) {
     obj.bind_vertex_data();
     obj.bind_attribute_data();
     objects.push_back(&obj);
+}
+
+void Scene::add_light(std::shared_ptr<PointLight> l) {
+    light = l;
 }
 
 void Scene::process_input() {

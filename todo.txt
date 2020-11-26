@@ -1,3 +1,4 @@
+window_size -> (8,6) -> (800,600)?
 Programmable camera
 Programmable light source
 Scene should keep track of all shaders, and write Uniform data to each of them per draw loop

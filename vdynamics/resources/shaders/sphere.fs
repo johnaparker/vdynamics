@@ -18,5 +18,5 @@ void main() {
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16);
     vec3 specular = vec3(1.0 * spec);
-    FragColor = vec4((ambient + diffuse + specular) * vec3(circleColor), circleColor.a);
+    FragColor = vec4((ambient + diffuse ) * vec3(circleColor) + specular, circleColor.a);
 }

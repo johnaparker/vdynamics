@@ -1,20 +1,23 @@
 #include "camera.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
-    Position = position;
-    WorldUp = up;
+Camera::Camera(vec3 position, vec3 up, float yaw, float pitch) : position(position), up(up), Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
+    WorldUp = glm::make_vec3(up.data());
+    Up = glm::make_vec3(up.data());
     Yaw = yaw;
     Pitch = pitch;
     updateCameraVectors();
 }
 
 glm::mat4 Camera::GetViewMatrix() {
+    auto Position = glm::make_vec3(position.data());
     return glm::lookAt(Position, Position + Front, Up);
 }
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
+    auto Position = glm::make_vec3(position.data());
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
         Position += Front * velocity;
@@ -28,6 +31,8 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
         Position += Up * velocity;
     if (direction == DOWN)
         Position -= Up * velocity;
+
+    position = vec3(Position.x, Position.y, Position.z);
 }
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch) {
