@@ -1,3 +1,4 @@
+shared_ptr for objects so that scene.draw(sphere(...)) works
 GLM interface pybind11 to avoid "property" calls? --- Replace GLM with Eigen entirely
 window_size -> (8,6) -> (800,600)?
 Programmable camera
@@ -5,5 +6,4 @@ Programmable light source
 Scene should keep track of all shaders, and write Uniform data to each of them per draw loop
 New Material class, inside RenderedObject (ambient, diffuse, specular, texture, color, etc.)
 New functions in RenderedObject to make writing Sphere and future objects easier
-
-#pragma once replace
+Use Uniform Buffer Objects to set the view and projection matrix for all shaders

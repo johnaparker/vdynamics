@@ -1,5 +1,4 @@
-#ifndef GUARD_vec_h
-#define GUARD_vec_h
+#pragma once
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
@@ -13,5 +12,3 @@ using vec4 = Eigen::Vector4f;
 using Eigen::Ref;
 
 using py_arr = py::array_t<double>;
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef GUARD_texture_s_h
-#define GUARD_texture_s_h
+#pragma once
 
 #include <string>
 
@@ -11,5 +10,3 @@ public:
 public:
     unsigned int ID;
 };
-
-#endif

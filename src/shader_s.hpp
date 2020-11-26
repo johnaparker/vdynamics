@@ -1,5 +1,4 @@
-#ifndef GUARD_shader_s_h
-#define GUARD_shader_s_h
+#pragma once
 
 #include <string>
 #include <glm/glm.hpp>
@@ -20,5 +19,3 @@ public:
 private:
     void checkCompileErrors(unsigned int shader, std::string type);
 };
-
-#endif

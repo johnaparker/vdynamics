@@ -29,11 +29,14 @@ void RenderingObject::bind_attribute_data() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
 
-void RenderingObject::setShader(std::string vshader, std::string fshader) {
-    shader = Shader(vshader, fshader);
+void RenderingObject::set_shader(std::string direc) {
+    shader = Shader(direc + vshader, direc + fshader);
 }
 
-Sphere::Sphere(vec3 position, float radius, vec4 color): RenderingObject(color), position(position), radius(radius) {}
+Sphere::Sphere(vec3 position, float radius, vec4 color): RenderingObject(color), position(position), radius(radius) {
+    vshader = "sphere.vs";
+    fshader = "sphere.fs";
+}
 
 void Sphere::bind_vertex_data() {
     shader.use(); 

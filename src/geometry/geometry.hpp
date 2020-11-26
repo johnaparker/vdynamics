@@ -1,5 +1,4 @@
-#ifndef GUARD_GEOMETRY_H
-#define GUARD_GEOMETRY_H
+#pragma once
 
 #include "shader_s.hpp"
 #include "vec.hpp"
@@ -12,7 +11,7 @@ public:
     ~RenderingObject();
 
     void bind_attribute_data();
-    void setShader(std::string vshader, std::string fshader);
+    void set_shader(std::string direc);
 
     virtual void draw() = 0;
     virtual void bind_vertex_data() = 0;
@@ -27,6 +26,8 @@ public:
 protected:
     unsigned int VAO, VBO, EBO;
     unsigned int modelVBO, colorVBO;
+
+    std::string vshader, fshader;
 };
 
 class Sphere: public RenderingObject {
@@ -42,5 +43,3 @@ public:
     vec3 position;
     float radius;
 };
-
-#endif

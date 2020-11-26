@@ -19,7 +19,6 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def_property("position", &PointLight::get_position, &PointLight::set_position);
 
     py::class_<RenderingObject>(m, "RenderingObject")
-        .def("setShader", &RenderingObject::setShader, "vshader"_a, "fshader"_a)
         .def_property("color", &RenderingObject::get_color, &RenderingObject::set_color);
 
     py::class_<Sphere, RenderingObject>(m, "Sphere")
@@ -33,4 +32,6 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def("draw", &Scene::draw, "object"_a)
         .def("add_light", &Scene::add_light, "light"_a)
         .def_readwrite("camera", &Scene::camera);
+
+    m.def("set_install_direc", &set_install_direc, "install_direc"_a);
 }

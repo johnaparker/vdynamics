@@ -1,5 +1,4 @@
-#ifndef GUARD_CAMERA_H
-#define GUARD_CAMERA_H
+#pragma once
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -49,4 +48,3 @@ public:
     float MouseSensitivity;
     float Zoom;
 };
-#endif

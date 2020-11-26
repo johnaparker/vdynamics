@@ -18,6 +18,9 @@
 #include "vis3d.hpp"
 #include "geometry/geometry.hpp"
 
+std::string INSTALL_DIREC;
+std::string SHADER_DIREC;
+
 Window::Window(unsigned int width, unsigned int height): width(width), height(height) {
     aspect_ratio = (float)(width) / (float)(height);
 
@@ -126,6 +129,7 @@ void Scene::update_view(Shader& shader) {
 void Scene::draw(RenderingObject& obj) {
     obj.bind_vertex_data();
     obj.bind_attribute_data();
+    obj.set_shader(SHADER_DIREC);
     objects.push_back(&obj);
 }
 
@@ -208,4 +212,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     mouse.lastY = ypos;
 
     scene->camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void set_install_direc(std::string intall_direc) {
+    INSTALL_DIREC = intall_direc;
+    SHADER_DIREC = INSTALL_DIREC + "/resources/shaders/";
 }
