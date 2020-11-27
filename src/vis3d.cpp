@@ -115,10 +115,8 @@ void Scene::run(std::function<void(int)> callback, int frames) {
 }
 
 void Scene::update_view(const Shader& shader) {
-    auto glm_position = glm::make_vec3(light->position.data());
-    shader.setVec3("lightPos", glm_position);
-    glm_position = glm::make_vec3(camera.position.data());
-    shader.setVec3("viewPos", glm_position);
+    shader.set_vec3("lightPos", light->position);
+    shader.set_vec3("viewPos", camera.position);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), window.aspect_ratio, 0.01f, 100.0f);
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));

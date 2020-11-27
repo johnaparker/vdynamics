@@ -128,7 +128,7 @@ void Sphere::draw(const Shader& shader) {
     mat4 model = rigid_body_model_matrix(position, vec3::Constant(radius));
 
     glBindVertexArray(VAO);
-    glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, model.data());
-    glUniform4fv(glGetUniformLocation(shader.ID, "color"), 1, color.data());
+    shader.set_mat4("model", model);
+    shader.set_vec4("color", color);
     glDrawElements(GL_TRIANGLES, 60*pow(4, 2), GL_UNSIGNED_INT, 0);
 }
