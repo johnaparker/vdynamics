@@ -59,7 +59,7 @@ Shader::Shader(const std::string vshader, const std::string fshader) {
     glDeleteShader(fragment);
 }
 
-void Shader::use() { 
+void Shader::use() const { 
     glUseProgram(ID); 
 }
 

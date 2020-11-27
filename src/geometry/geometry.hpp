@@ -11,9 +11,8 @@ public:
     ~RenderingObject();
 
     void bind_attribute_data();
-    void set_shader(std::string direc);
 
-    virtual void draw() = 0;
+    virtual void draw(const Shader& shader) = 0;
     virtual void bind_vertex_data() = 0;
 
     vec4& get_color() {return color;}
@@ -21,19 +20,17 @@ public:
 
 public:
     vec4 color;
-    Shader shader;
+    std::string vshader, fshader;
 
 protected:
     unsigned int VAO, VBO, EBO;
     unsigned int modelVBO, colorVBO;
-
-    std::string vshader, fshader;
 };
 
 class Sphere: public RenderingObject {
 public:
     Sphere(vec3 position, float radius, vec4 color);
-    void draw();
+    void draw(const Shader& shader);
     void bind_vertex_data();
 
     vec3& get_position() {return position;}

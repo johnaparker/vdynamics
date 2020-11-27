@@ -32,7 +32,6 @@ Window::Window(unsigned int width, unsigned int height): width(width), height(he
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    std::cout << width << ", " << height << std::endl;
     window = glfwCreateWindow(width, height, "", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -96,9 +95,11 @@ void Scene::run(std::function<void(int)> callback, int frames) {
         glClearColor(background_color.r, background_color.g, background_color.b, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
-        for (auto& obj: objects) {
-            update_view(obj->shader);
-            obj->draw();
+        for (auto& [shader, obj_list]: objects) {
+            update_view(shader);
+            shader.use();
+            for (auto& obj: obj_list)
+                obj->draw(shader);
         }
 
         glfwSwapBuffers(window.window);
@@ -113,7 +114,7 @@ void Scene::run(std::function<void(int)> callback, int frames) {
     window.close();
 }
 
-void Scene::update_view(Shader& shader) {
+void Scene::update_view(const Shader& shader) {
     auto glm_position = glm::make_vec3(light->position.data());
     shader.setVec3("lightPos", glm_position);
     glm_position = glm::make_vec3(camera.position.data());
@@ -127,10 +128,19 @@ void Scene::update_view(Shader& shader) {
 }
 
 void Scene::draw(std::shared_ptr<RenderingObject> obj) {
+    ShaderLabel label(obj->vshader, obj->fshader);
+
+    auto it = shaders.find(label);
+    if (it == shaders.end()) {
+        Shader new_shader(SHADER_DIREC + obj->vshader, SHADER_DIREC + obj->fshader);
+        shaders[label] = new_shader;
+        objects[new_shader] = {};
+    }
+
+    auto shader = shaders[label];
     obj->bind_vertex_data();
     obj->bind_attribute_data();
-    obj->set_shader(SHADER_DIREC);
-    objects.push_back(obj);
+    objects[shader].push_back(obj);
 }
 
 void Scene::add_light(std::shared_ptr<PointLight> l) {

@@ -5,7 +5,7 @@ set(PROJECT_NAME _vdynamics)
 project(${PROJECT_NAME})
 
 # set flags
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-Werror -Og")
 if(NOT CMAKE_BUILD_TYPE)

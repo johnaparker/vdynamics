@@ -4,6 +4,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <string>
+#include <map>
 #include <vector>
 #include <functional>
 #include <memory>
@@ -16,12 +17,14 @@
 #include <camera.hpp>
 
 namespace py = pybind11;
+using ShaderLabel = std::pair<std::string,std::string>;
 
 void window_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void set_install_direc(std::string intall_direc);
+
 
 struct Mouse {
     float xshift = 0;
@@ -67,7 +70,7 @@ public:
 
 private:
     void process_input();
-    void update_view(Shader& shader);
+    void update_view(const Shader& shader);
 
 public:
     glm::vec3 background_color;
@@ -75,7 +78,8 @@ public:
     Camera camera;
     Mouse mouse;
 
-    std::vector<std::shared_ptr<RenderingObject>> objects;
+    std::map<ShaderLabel, Shader> shaders;
+    std::map<Shader, std::vector<std::shared_ptr<RenderingObject>>> objects;
     std::shared_ptr<PointLight> light;
 
     bool paused = false;

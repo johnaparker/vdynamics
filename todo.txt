@@ -1,8 +1,10 @@
-GLM interface pybind11 to avoid "property" calls? --- Replace GLM with Eigen entirely
+* GLM interface pybind11 to avoid "property" calls? --- Replace GLM with Eigen entirely
+* separte into hpp/cpp files
+* New Material class, inside RenderedObject (ambient, diffuse, specular, texture, color, etc.)
+* New functions in RenderedObject to make writing Sphere and future objects easier
+
+Use Uniform Buffer Objects to set the view and projection matrix for all shaders
 window_size -> (8,6) -> (800,600)?
 Programmable camera
-Programmable light source
-Scene should keep track of all shaders, and write Uniform data to each of them per draw loop
-New Material class, inside RenderedObject (ambient, diffuse, specular, texture, color, etc.)
-New functions in RenderedObject to make writing Sphere and future objects easier
-Use Uniform Buffer Objects to set the view and projection matrix for all shaders
+Programmable light source (multiple lights, DirectionalLight)
+auto camera: when scene.run() is called, iterative over objects to find CoM and extent to auto-set properties of the camera (option to override if camera is set explicitly)

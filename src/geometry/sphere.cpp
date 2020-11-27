@@ -21,16 +21,11 @@ RenderingObject::~RenderingObject() {
 }
 
 void RenderingObject::bind_attribute_data() {
-    shader.use(); 
     glBindVertexArray(VAO);
     //glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-}
-
-void RenderingObject::set_shader(std::string direc) {
-    shader = Shader(direc + vshader, direc + fshader);
 }
 
 Sphere::Sphere(vec3 position, float radius, vec4 color): RenderingObject(color), position(position), radius(radius) {
@@ -39,7 +34,6 @@ Sphere::Sphere(vec3 position, float radius, vec4 color): RenderingObject(color),
 }
 
 void Sphere::bind_vertex_data() {
-    shader.use(); 
     glBindVertexArray(VAO);
 
     float t = (1 + sqrt(5))/2;
@@ -124,8 +118,7 @@ void Sphere::bind_vertex_data() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*3*sizeof(int), &indices[0], GL_STATIC_DRAW);
 }
 
-void Sphere::draw() {
-    shader.use(); 
+void Sphere::draw(const Shader& shader) {
     glBindVertexArray(VAO);
 
     glm::mat4 model = glm::mat4(1.0f);
