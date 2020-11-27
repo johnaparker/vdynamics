@@ -1,4 +1,3 @@
-shared_ptr for objects so that scene.draw(sphere(...)) works
 GLM interface pybind11 to avoid "property" calls? --- Replace GLM with Eigen entirely
 window_size -> (8,6) -> (800,600)?
 Programmable camera

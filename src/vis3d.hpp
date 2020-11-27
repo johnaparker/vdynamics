@@ -61,7 +61,7 @@ class Scene {
 public:
     Scene(py::array_t<float> background, py::array_t<unsigned int> window_size);
 
-    void draw(RenderingObject& obj);
+    void draw(std::shared_ptr<RenderingObject> obj);
     void add_light(std::shared_ptr<PointLight> light);
     void run(std::function<void(int)> callback, int frames);
 
@@ -75,7 +75,7 @@ public:
     Camera camera;
     Mouse mouse;
 
-    std::vector<RenderingObject*> objects;
+    std::vector<std::shared_ptr<RenderingObject>> objects;
     std::shared_ptr<PointLight> light;
 
     bool paused = false;

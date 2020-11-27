@@ -126,11 +126,11 @@ void Scene::update_view(Shader& shader) {
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 }
 
-void Scene::draw(RenderingObject& obj) {
-    obj.bind_vertex_data();
-    obj.bind_attribute_data();
-    obj.set_shader(SHADER_DIREC);
-    objects.push_back(&obj);
+void Scene::draw(std::shared_ptr<RenderingObject> obj) {
+    obj->bind_vertex_data();
+    obj->bind_attribute_data();
+    obj->set_shader(SHADER_DIREC);
+    objects.push_back(obj);
 }
 
 void Scene::add_light(std::shared_ptr<PointLight> l) {

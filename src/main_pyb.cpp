@@ -18,10 +18,10 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def(py::init<vec3>(), "position"_a)
         .def_property("position", &PointLight::get_position, &PointLight::set_position);
 
-    py::class_<RenderingObject>(m, "RenderingObject")
+    py::class_<RenderingObject, std::shared_ptr<RenderingObject>>(m, "RenderingObject")
         .def_property("color", &RenderingObject::get_color, &RenderingObject::set_color);
 
-    py::class_<Sphere, RenderingObject>(m, "Sphere")
+    py::class_<Sphere, RenderingObject, std::shared_ptr<Sphere>>(m, "Sphere")
         .def(py::init<vec3, float, vec4>(), "position"_a, "radius"_a, "color"_a)
         .def_readwrite("radius", &Sphere::radius)
         .def_property("position", &Sphere::get_position, &Sphere::set_position);
