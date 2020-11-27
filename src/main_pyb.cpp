@@ -1,8 +1,10 @@
-#include "vis3d.hpp"
-#include "geometry/geometry.hpp"
-#include "camera.hpp"
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+
+#include "scene.hpp"
+#include "camera.hpp"
+#include "geometry/rendering_object.hpp"
+#include "geometry/sphere.hpp"
 
 using namespace pybind11::literals;
 

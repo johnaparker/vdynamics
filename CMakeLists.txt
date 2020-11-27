@@ -71,7 +71,9 @@ set(SOURCES ${SOURCES}
     src/texture_s.cpp
     src/file_io.cpp
     src/camera.cpp
-    src/vis3d.cpp
+    src/scene.cpp
+    src/geometry/rigid_body.cpp
+    src/geometry/rendering_object.cpp
     src/geometry/sphere.cpp)
 
 # set pybind11 binding files

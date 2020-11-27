@@ -1,4 +1,3 @@
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -15,8 +14,7 @@
 #include <camera.hpp>
 
 #include "file_io.hpp"
-#include "vis3d.hpp"
-#include "geometry/geometry.hpp"
+#include "scene.hpp"
 
 std::string INSTALL_DIREC;
 std::string SHADER_DIREC;

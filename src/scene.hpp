@@ -13,7 +13,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "geometry/geometry.hpp"
+#include "geometry/rendering_object.hpp"
 #include <camera.hpp>
 
 namespace py = pybind11;
@@ -25,6 +25,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void set_install_direc(std::string intall_direc);
 
+struct PointLight {
+    vec3 position;
+
+    vec3& get_position() {return position;};
+    void set_position(vec3 p) {position = p;};
+};
 
 struct Mouse {
     float xshift = 0;
@@ -51,13 +57,6 @@ public:
     unsigned int width;
     unsigned int height;
     float aspect_ratio;
-};
-
-struct PointLight {
-    vec3 position;
-
-    vec3& get_position() {return position;};
-    void set_position(vec3 p) {position = p;};
 };
 
 class Scene {

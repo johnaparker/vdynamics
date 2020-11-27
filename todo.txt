@@ -1,8 +1,9 @@
-* separte into hpp/cpp files, move old files to temp directory
 * New Material class, inside RenderedObject (ambient, diffuse, specular, texture, color, etc.), and RenderedObject.set_attributes(shader)
 * RenderedObject should not have color
 * New functions in RenderedObject to make writing Sphere and future objects easier
 
+Separate pyb files
+Breakup scene into hpp/cpp files (lights, window, callback)
 Replace GLM with Eigen
 Use Uniform Buffer Objects to set the view and projection matrix for all shaders
 window_size -> (8,6) -> (800,600)?
