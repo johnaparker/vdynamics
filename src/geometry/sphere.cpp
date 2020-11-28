@@ -93,22 +93,18 @@ Sphere::Sphere(vec3 position, float radius, vec4 color, Material material, unsig
 }
 
 void Sphere::bind_vertex_data() {
-    glBindVertexArray(VAO);
     auto [vertices, indices] = sphere_vertex_data(resolution);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size()*3*sizeof(float), &vertices[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*3*sizeof(int), &indices[0], GL_STATIC_DRAW);
+    bind_vertices(vertices);
+    bind_indices(indices);
 }
 
 void Sphere::draw(const Shader& shader) {
     mat4 model = rigid_body_model_matrix(position, vec3::Constant(radius));
 
-    glBindVertexArray(VAO);
     shader.set_mat4("model", model);
     shader.set_vec4("color", color);
     material.bind_attributes(shader);
-    glDrawElements(GL_TRIANGLES, 60*pow(4, resolution), GL_UNSIGNED_INT, 0);
+
+    draw_triangles(60*pow(4, resolution));
 }

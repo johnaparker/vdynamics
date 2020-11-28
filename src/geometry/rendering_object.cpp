@@ -26,6 +26,23 @@ RenderingObject::~RenderingObject() {
     glDeleteBuffers(1, &EBO);
 }
 
+void RenderingObject::bind_vertices(std::vector<vec3>& vertices) {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*3*sizeof(float), &vertices[0], GL_STATIC_DRAW);
+}
+
+void RenderingObject::bind_indices(std::vector<ivec3>& indices) {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*3*sizeof(int), &indices[0], GL_STATIC_DRAW);
+}
+
+void RenderingObject::draw_triangles(unsigned int N) {
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, N, GL_UNSIGNED_INT, 0);
+}
+
 void RenderingObject::bind_attribute_data() {
     glBindVertexArray(VAO);
     //glBindBuffer(GL_ARRAY_BUFFER, VBO);

@@ -2,6 +2,7 @@
 
 #include "shader_s.hpp"
 #include "vec.hpp"
+#include <vector>
 
 class Material {
 public:
@@ -19,6 +20,10 @@ class RenderingObject {
 public:
     RenderingObject(Material material);
     ~RenderingObject();
+
+    void bind_vertices(std::vector<vec3>& vertices);
+    void bind_indices(std::vector<ivec3>& indices);
+    void draw_triangles(unsigned int N);
 
     virtual void bind_attribute_data();
     virtual void bind_vertex_data() = 0;
