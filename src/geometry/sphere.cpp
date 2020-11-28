@@ -108,3 +108,41 @@ void Sphere::draw(const Shader& shader) {
 
     draw_triangles(60*pow(4, resolution));
 }
+
+SphereCollection::SphereCollection(vec3_a position, Array radius, vec4_a color, Material material, unsigned int resolution): CollectionObject(material, color), position(position), radius(radius), resolution(resolution) {
+    vshader = "sphere_collection.vs";
+    fshader = "sphere.fs";
+    Nobjects = position.rows();
+    models.resize(Nobjects);
+    update_models();
+}
+
+void SphereCollection::update_models() {
+    for (int i = 0; i < Nobjects; i++) {
+        mat4 model = rigid_body_model_matrix(position.row(i), vec3::Constant(radius(i)));
+        models[i] = model;
+    }
+}
+
+void SphereCollection::bind_vertex_data() {
+    auto [vertices, indices] = sphere_vertex_data(resolution);
+
+    bind_vertices(vertices);
+    bind_indices(indices);
+
+    glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
+    glBufferData(GL_ARRAY_BUFFER, Nobjects * sizeof(mat4), models[0].data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+    glBufferData(GL_ARRAY_BUFFER, Nobjects * sizeof(vec4), color.data(), GL_DYNAMIC_DRAW);
+}
+
+void SphereCollection::draw(const Shader& shader) {
+    update_models();
+    glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
+    glBufferData(GL_ARRAY_BUFFER, Nobjects * sizeof(mat4), models[0].data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+    glBufferData(GL_ARRAY_BUFFER, Nobjects * sizeof(vec4), color.data(), GL_DYNAMIC_DRAW);
+
+    material.bind_attributes(shader);
+    draw_triangles_instanced(60*pow(4, resolution), Nobjects);
+}

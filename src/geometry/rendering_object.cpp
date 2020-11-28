@@ -50,10 +50,53 @@ void RenderingObject::draw_triangles(unsigned int N) {
 
 void RenderingObject::bind_attribute_data() {
     glBindVertexArray(VAO);
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
 
-ColoredObject::ColoredObject(Material material, vec4 color): RenderingObject(material), color(color) {}
+ColoredObject::ColoredObject(Material material, vec4 color): RenderingObject(material), color(color) {};
+
+
+CollectionObject::CollectionObject(Material material, vec4_a color): RenderingObject(material), color(color) {
+    glGenBuffers(1, &modelVBO);
+    glGenBuffers(1, &colorVBO);
+}
+
+void CollectionObject::bind_attribute_data() {
+    glBindVertexArray(VAO);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)(sizeof(vec4)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)(2 * sizeof(vec4)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)(3 * sizeof(vec4)));
+
+    glVertexAttribDivisor(1, 1);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+
+    glEnableVertexAttribArray(5);
+    glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(vec4), (void*)0);
+    glVertexAttribDivisor(5, 1);
+}
+
+void CollectionObject::draw_triangles_instanced(unsigned int N, unsigned int M) {
+    if (CullFace)
+        glEnable(GL_CULL_FACE);  
+    else
+        glDisable(GL_CULL_FACE);  
+
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, N, GL_UNSIGNED_INT, 0, M);
+}

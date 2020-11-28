@@ -18,6 +18,10 @@ using mat2 = Eigen::Matrix<float, 2, 2>;
 using mat3 = Eigen::Matrix<float, 3, 3>;
 using mat4 = Eigen::Matrix<float, 4, 4>;
 
+using vec3_a = Eigen::Matrix<float, Eigen::Dynamic, 3, Eigen::RowMajor>;
+using vec4_a = Eigen::Matrix<float, Eigen::Dynamic, 4, Eigen::RowMajor>;
+using Array = Eigen::ArrayXd;
+
 using Eigen::Ref;
 
 using py_arr = py::array_t<double>;

@@ -51,5 +51,17 @@ public:
     vec4 color;
 };
 
-//class CollectionObject;
+class CollectionObject: public RenderingObject {
+public:
+    CollectionObject(Material material, vec4_a color);
+    void draw_triangles_instanced(unsigned int N, unsigned int M);
 
+    virtual void bind_attribute_data() override;
+
+    vec4_a& get_color() {return color;}
+    void set_color(const vec4_a& c) {color = c;}
+
+public:
+    unsigned int modelVBO, colorVBO;
+    vec4_a color;
+};

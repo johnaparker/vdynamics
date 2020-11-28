@@ -29,10 +29,18 @@ PYBIND11_MODULE(_vdynamics, m) {
     py::class_<ColoredObject, RenderingObject, std::shared_ptr<ColoredObject>>(m, "ColoredObject")
         .def_property("color", &ColoredObject::get_color, &ColoredObject::set_color);
 
+    py::class_<CollectionObject, RenderingObject, std::shared_ptr<CollectionObject>>(m, "CollectionObject")
+        .def_property("color", &CollectionObject::get_color, &CollectionObject::set_color);
+
     py::class_<Sphere, ColoredObject, std::shared_ptr<Sphere>>(m, "Sphere")
         .def(py::init<vec3, float, vec4, Material, unsigned int>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material(), "resolution"_a=3)
         .def_readwrite("radius", &Sphere::radius)
         .def_property("position", &Sphere::get_position, &Sphere::set_position);
+
+    py::class_<SphereCollection, CollectionObject, std::shared_ptr<SphereCollection>>(m, "SphereCollection")
+        .def(py::init<vec3_a, Array, vec4_a, Material, unsigned int>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material(), "resolution"_a=3)
+        .def_property("position", &SphereCollection::get_position, &SphereCollection::set_position)
+        .def_property("radius", &SphereCollection::get_radius, &SphereCollection::set_radius);
 
     py::class_<Rectangle, ColoredObject, std::shared_ptr<Rectangle>>(m, "Rectangle")
         .def(py::init<vec3, float, float, vec4, Material>(), "position"_a, "Lx"_a,  "Ly"_a, "color"_a, "material"_a=Material())
