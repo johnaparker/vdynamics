@@ -5,6 +5,7 @@
 #include "camera.hpp"
 #include "geometry/rendering_object.hpp"
 #include "geometry/sphere.hpp"
+#include "geometry/rectangle.hpp"
 
 using namespace pybind11::literals;
 
@@ -32,6 +33,12 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def(py::init<vec3, float, vec4, Material, unsigned int>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material(), "resolution"_a=3)
         .def_readwrite("radius", &Sphere::radius)
         .def_property("position", &Sphere::get_position, &Sphere::set_position);
+
+    py::class_<Rectangle, ColoredObject, std::shared_ptr<Rectangle>>(m, "Rectangle")
+        .def(py::init<vec3, float, float, vec4, Material>(), "position"_a, "Lx"_a,  "Ly"_a, "color"_a, "material"_a=Material())
+        .def_readwrite("Lx", &Rectangle::Lx)
+        .def_readwrite("Ly", &Rectangle::Ly)
+        .def_property("position", &Rectangle::get_position, &Rectangle::set_position);
 
     py::class_<Scene>(m, "Scene")
         .def(py::init<py::array_t<float>, py::array_t<unsigned int>>(), "background"_a, "window_size"_a)

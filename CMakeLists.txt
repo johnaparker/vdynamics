@@ -74,7 +74,8 @@ set(SOURCES ${SOURCES}
     src/scene.cpp
     src/geometry/rigid_body.cpp
     src/geometry/rendering_object.cpp
-    src/geometry/sphere.cpp)
+    src/geometry/sphere.cpp
+    src/geometry/rectangle.cpp)
 
 # set pybind11 binding files
 set(BINDINGS 

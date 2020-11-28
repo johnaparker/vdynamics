@@ -21,7 +21,7 @@ public:
     RenderingObject(Material material);
     ~RenderingObject();
 
-    void bind_vertices(std::vector<vec3>& vertices);
+    void bind_vertices(std::vector<vec3>& vertices, int N=3);
     void bind_indices(std::vector<ivec3>& indices);
     void draw_triangles(unsigned int N);
 
@@ -32,10 +32,12 @@ public:
 
 public:
     Material material;
-    std::string vshader, fshader;
+    std::string vshader = "default.vs";
+    std::string fshader = "default.fs";
 
 protected:
     unsigned int VAO, VBO, EBO;
+    bool CullFace = true;
 };
 
 class ColoredObject: public RenderingObject {

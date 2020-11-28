@@ -5,7 +5,7 @@
 using namespace std;
 
 Material::Material(float ambient, float diffuse, float specular, float shininess):
-          ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess) {};
+    ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess) {};
 
 void Material::bind_attributes(const Shader& shader) {
     shader.set_float("material.ambient", ambient);
@@ -26,10 +26,10 @@ RenderingObject::~RenderingObject() {
     glDeleteBuffers(1, &EBO);
 }
 
-void RenderingObject::bind_vertices(std::vector<vec3>& vertices) {
+void RenderingObject::bind_vertices(std::vector<vec3>& vertices, int N) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size()*3*sizeof(float), &vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size()*N*sizeof(float), &vertices[0], GL_STATIC_DRAW);
 }
 
 void RenderingObject::bind_indices(std::vector<ivec3>& indices) {
@@ -39,6 +39,11 @@ void RenderingObject::bind_indices(std::vector<ivec3>& indices) {
 }
 
 void RenderingObject::draw_triangles(unsigned int N) {
+    if (CullFace)
+        glEnable(GL_CULL_FACE);  
+    else
+        glDisable(GL_CULL_FACE);  
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, N, GL_UNSIGNED_INT, 0);
 }
