@@ -1,8 +1,6 @@
-* New Material class, inside RenderedObject (ambient, diffuse, specular, texture, color, etc.), and RenderedObject.set_attributes(shader)
-* RenderedObject should not have color
 * New functions in RenderedObject to make writing Sphere and future objects easier
 
-Separate pyb files
+Separate pyb files, create submodules
 Breakup scene into hpp/cpp files (lights, window, callback)
 Replace GLM with Eigen
 Use Uniform Buffer Objects to set the view and projection matrix for all shaders

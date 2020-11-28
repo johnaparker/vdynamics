@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Sphere::Sphere(vec3 position, float radius, vec4 color): RenderingObject(color), position(position), radius(radius) {
+Sphere::Sphere(vec3 position, float radius, vec4 color, Material material): ColoredObject(material, color), position(position), radius(radius) {
     vshader = "sphere.vs";
     fshader = "sphere.fs";
 }
@@ -102,5 +102,6 @@ void Sphere::draw(const Shader& shader) {
     glBindVertexArray(VAO);
     shader.set_mat4("model", model);
     shader.set_vec4("color", color);
+    material.bind_attributes(shader);
     glDrawElements(GL_TRIANGLES, 60*pow(4, 2), GL_UNSIGNED_INT, 0);
 }

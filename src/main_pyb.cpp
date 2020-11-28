@@ -20,11 +20,16 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def(py::init<vec3>(), "position"_a)
         .def_property("position", &PointLight::get_position, &PointLight::set_position);
 
-    py::class_<RenderingObject, std::shared_ptr<RenderingObject>>(m, "RenderingObject")
-        .def_property("color", &RenderingObject::get_color, &RenderingObject::set_color);
+    py::class_<Material>(m, "Material")
+        .def(py::init<float,float,float,float>(), "ambient"_a=0.3f, "diffuse"_a=1.0f, "specular"_a=0.5f, "shininess"_a=32.f);
 
-    py::class_<Sphere, RenderingObject, std::shared_ptr<Sphere>>(m, "Sphere")
-        .def(py::init<vec3, float, vec4>(), "position"_a, "radius"_a, "color"_a)
+    py::class_<RenderingObject, std::shared_ptr<RenderingObject>>(m, "RenderingObject");
+
+    py::class_<ColoredObject, RenderingObject, std::shared_ptr<ColoredObject>>(m, "ColoredObject")
+        .def_property("color", &ColoredObject::get_color, &ColoredObject::set_color);
+
+    py::class_<Sphere, ColoredObject, std::shared_ptr<Sphere>>(m, "Sphere")
+        .def(py::init<vec3, float, vec4, Material>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material())
         .def_readwrite("radius", &Sphere::radius)
         .def_property("position", &Sphere::get_position, &Sphere::set_position);
 

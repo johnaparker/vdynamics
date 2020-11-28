@@ -4,7 +4,17 @@
 
 using namespace std;
 
-RenderingObject::RenderingObject(vec4 color): color(color) {
+Material::Material(float ambient, float diffuse, float specular, float shininess):
+          ambient(ambient), diffuse(diffuse), specular(specular), shininess(shininess) {};
+
+void Material::bind_attributes(const Shader& shader) {
+    shader.set_float("material.ambient", ambient);
+    shader.set_float("material.diffuse", diffuse);
+    shader.set_float("material.specular", specular);
+    shader.set_float("material.shininess", shininess);
+}
+
+RenderingObject::RenderingObject(Material material): material(material) {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -23,3 +33,5 @@ void RenderingObject::bind_attribute_data() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 }
+
+ColoredObject::ColoredObject(Material material, vec4 color): RenderingObject(material), color(color) {}

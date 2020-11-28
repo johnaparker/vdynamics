@@ -3,23 +3,44 @@
 #include "shader_s.hpp"
 #include "vec.hpp"
 
+class Material {
+public:
+    Material(float ambient=0.3f, float diffuse=1.0f, float specular=0.5f, float shininess=32.f);
+    void bind_attributes(const Shader& shader);
+
+public:
+    float ambient;
+    float diffuse;
+    float specular;
+    float shininess;
+};
+
 class RenderingObject {
 public:
-    RenderingObject(vec4 color);
+    RenderingObject(Material material);
     ~RenderingObject();
 
     virtual void bind_attribute_data();
     virtual void bind_vertex_data() = 0;
     virtual void draw(const Shader& shader) = 0;
+    //virtual void draw_init(const Shader& shader);
+
+public:
+    Material material;
+    std::string vshader, fshader;
+
+protected:
+    unsigned int VAO, VBO, EBO;
+};
+
+class ColoredObject: public RenderingObject {
+public:
+    ColoredObject(Material material, vec4 color);
 
     vec4& get_color() {return color;}
     void set_color(vec4 c) {color = c;}
 
 public:
     vec4 color;
-    std::string vshader, fshader;
-
-protected:
-    unsigned int VAO, VBO, EBO;
-    unsigned int modelVBO, colorVBO;
 };
+
