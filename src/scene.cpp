@@ -94,8 +94,8 @@ void Scene::run(std::function<void(int)> callback, int frames) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
         for (auto& [shader, obj_list]: objects) {
-            update_view(shader);
             shader.use();
+            update_view(shader);
             for (auto& obj: obj_list)
                 obj->draw(shader);
         }
