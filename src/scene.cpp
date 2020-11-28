@@ -78,7 +78,7 @@ Scene::Scene(py::array_t<float> background, py::array_t<unsigned int> window_siz
     auto window_size_data = window_size.unchecked<1>();
     window = Window(window_size_data(0), window_size_data(1));
 
-    camera = Camera(vec3(0.0f, 0.0f, 3.0f));
+    camera = Camera(vec3(2.0f, 2.0f, 2.0f));
 
     glfwSetWindowUserPointer(window.window, reinterpret_cast<void *>(this));
 }

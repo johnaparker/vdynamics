@@ -1,31 +1,15 @@
-import sphere_vis
+import vdynamics
 import numpy as np
-from time import sleep
 
-def circle_vis(position, radius):
-    root = sphere_vis.__path__[0]
-    vshader = f'{root}/resources/shaders/circle_vis.vs'
-    fshader = f'{root}/resources/shaders/circle_vis.fs'
+scene = vdynamics.Scene([1]*4, (800,600))
+pos = np.random.random((5,3))
+radii = .01*np.ones(5)
+colors = [[1,0,0,1]]*5
 
-    rmax = np.max(radius)
-    xmin = np.min(position[...,0]) - rmax
-    xmax = np.max(position[...,0]) + rmax
-    ymin = np.min(position[...,1]) - rmax
-    ymax = np.max(position[...,1]) + rmax
-    dims = np.array([[xmin, xmax], [ymin, ymax]], dtype=float)
+light = vdynamics.PointLight([0,0,4])
+scene.add_light(light)
 
-    sphere_vis.circle_vis(pos, radii, dims, vshader, fshader)
-
-N = 1000
-Nt = 100
-xmax = 30
-
-pos_i = np.random.uniform(-xmax, xmax, size=(N,2)).astype(np.float32)
-pos = np.empty([Nt, N, 2], dtype=np.float32)
-t = np.linspace(0, 2*np.pi, Nt)
-for i in range(Nt):
-    pos[i] = pos_i + 3*np.array([np.cos(t[i]), np.sin(t[i])])
-
-radii = np.random.uniform(.2, .3, size=(N,))
-
-circle_vis(pos, radii)
+scene.draw(vdynamics.Sphere([0,0,0], .1, [0,0,1,1]))
+spheres = vdynamics.SphereCollection(pos, radii, colors, resolution=1)
+scene.draw(spheres)
+scene.run()

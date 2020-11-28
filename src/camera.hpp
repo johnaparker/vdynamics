@@ -13,15 +13,15 @@ enum Camera_Movement {
     DOWN
 };
 
-const float YAW         = -90.0f;
-const float PITCH       =  0.0f;
+const float YAW         =  -135.0f;
+const float PITCH       =  -30.0f;
 const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
 
 class Camera {
 public:
-    Camera(vec3 position = vec3(0, 0, 0), vec3 up = vec3(0, 1, 0), float yaw = YAW, float pitch = PITCH);
+    Camera(vec3 position = vec3(0, 0, 0), vec3 up = vec3(0, 0, 1), float yaw = YAW, float pitch = PITCH);
 
     glm::mat4 GetViewMatrix();
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);

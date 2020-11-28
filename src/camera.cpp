@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-Camera::Camera(vec3 position, vec3 up, float yaw, float pitch) : position(position), up(up), Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
+Camera::Camera(vec3 position, vec3 up, float yaw, float pitch) : position(position), up(up), Front(glm::vec3(0.0f, -1.0f, 0.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
     WorldUp = glm::make_vec3(up.data());
     Up = glm::make_vec3(up.data());
     Yaw = yaw;
@@ -39,7 +39,7 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constr
     xoffset *= MouseSensitivity;
     yoffset *= MouseSensitivity;
 
-    Yaw   += xoffset;
+    Yaw   -= xoffset;
     Pitch += yoffset;
 
     if (constrainPitch) {
@@ -63,8 +63,8 @@ void Camera::ProcessMouseScroll(float yoffset) {
 void Camera::updateCameraVectors() {
     glm::vec3 front;
     front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-    front.y = sin(glm::radians(Pitch));
-    front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    front.y = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    front.z = sin(glm::radians(Pitch));
     Front = glm::normalize(front);
 
     Right = glm::normalize(glm::cross(Front, WorldUp));
