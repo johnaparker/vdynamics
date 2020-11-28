@@ -57,7 +57,7 @@ Window::Window(unsigned int width, unsigned int height): width(width), height(he
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_CULL_FACE);  
-    glCullFace(GL_BACK);  
+    glCullFace(GL_FRONT);  
 }
 
 void Window::set_window_size(unsigned int w, unsigned int h) {

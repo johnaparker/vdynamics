@@ -44,3 +44,5 @@ public:
     vec4 color;
 };
 
+//class CollectionObject;
+

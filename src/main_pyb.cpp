@@ -29,7 +29,7 @@ PYBIND11_MODULE(_vdynamics, m) {
         .def_property("color", &ColoredObject::get_color, &ColoredObject::set_color);
 
     py::class_<Sphere, ColoredObject, std::shared_ptr<Sphere>>(m, "Sphere")
-        .def(py::init<vec3, float, vec4, Material>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material())
+        .def(py::init<vec3, float, vec4, Material, unsigned int>(), "position"_a, "radius"_a, "color"_a, "material"_a=Material(), "resolution"_a=3)
         .def_readwrite("radius", &Sphere::radius)
         .def_property("position", &Sphere::get_position, &Sphere::set_position);
 

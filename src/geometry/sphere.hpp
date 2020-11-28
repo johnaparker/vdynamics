@@ -4,7 +4,7 @@
 
 class Sphere: public ColoredObject {
 public:
-    Sphere(vec3 position, float radius, vec4 color, Material material);
+    Sphere(vec3 position, float radius, vec4 color, Material material, unsigned int resolution=3);
     void bind_vertex_data() override;
     void draw(const Shader& shader) override;
 
@@ -14,7 +14,10 @@ public:
 public:
     vec3 position;
     float radius;
+
+private:
+    unsigned int resolution;
 };
 
-//class SphereCollection
+//class SphereCollection: public CollectionObject
     //unsigned int modelVBO, colorVBO;
